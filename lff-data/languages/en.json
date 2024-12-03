@@ -1,0 +1,7 @@
+{
+    "plugin-data":
+    {
+        "name": "LFF Data",
+        "description": "Hooks into LFF app data"
+    }
+}
