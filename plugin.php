@@ -28,6 +28,7 @@ function nth_day_of_month($nbr, $day, $mon, $year){
 			$content=str_replace('[lffeventsgrid]', pluginLFFData::LFF_EventsGrid(), $content);
 			$content=str_replace('[lffservices]', pluginLFFData::LFF_Services(), $content);
 			$content=str_replace('[lffvenues]', pluginLFFData::LFF_VenuesRec(), $content);
+			$content=str_replace('[lffhotels]', pluginLFFData::LFF_Hotels(), $content);
 			$content=str_replace('[lfffuture]', pluginLFFData::LFF_Future(), $content);
 			$content=str_replace('[lffhighlights]', pluginLFFData::LFF_Highlights(), $content);
 			if (str_contains($content,'[youtube',)) { $content=pluginLFFData::YoutubeVid($content); }
@@ -37,7 +38,7 @@ function nth_day_of_month($nbr, $day, $mon, $year){
 		}
 	
 		public function init() {
-		 $this->customHooks = array('LFF_Map','LFF_Events','LFF_EventsGrid','LFF_Offers','LFF_Venues','LFF_VenuesRec','LFF_Services','LFF_Header','LFF_Footer','LFF_Future');	
+		 $this->customHooks = array('LFF_Map','LFF_Events','LFF_EventsGrid','LFF_Offers','LFF_Venues','LFF_VenuesRec','LFF_Services','LFF_Header','LFF_Footer','LFF_Future', 'LFF_Hotels');	
 		}
 		
 		public function YoutubeVid($thecontent) {
@@ -93,15 +94,15 @@ function nth_day_of_month($nbr, $day, $mon, $year){
 			$day = date('d');
 			$year = (int)date('Y');
 			$html = '<div class="gallery">';
-			// $html .= '<div class="futurelfftitle">Upcoming LFFs</div>';
+		    $html .= '<h4>Upcoming Leeds First Friday Dates</h4>';
 			$html .= '<ul class="lffdategrid">';
 			for ($i=1; $i<15; $i++) {
 				if ($count>12) {break;}
 				$lffdatenum = nth_day_of_month(1,'Friday',$month,$year);
 				if ( $lffdatenum > $t) {
 					$lffmonth = date('F',$lffdatenum);
-					$lffdate=date('l jS F Y',$lffdatenum);
-					$html .= '<li class="lffdate"><div class="lffdatebg"><img class="lffdatebg" src="https://www.leedsfirstfriday.com/app/images/lff_bg1.webp" /></div><div class="lffdatetitle"><img class="lffdatelogo" src="https://www.leedsfirstfriday.com/app/images/lfflogowhite.webp" />'.$lffmonth.'</div>';
+					$lffdate=date('jS M Y',$lffdatenum);
+					$html .= '<li class="lffdate"><div class="lffdatebg"><img class="lffdatebg" src="'.HTML_PATH_ROOT.'/bl-themes/jttheme/img/lff_bg1.webp" /></div><div class="lffdatetitle"><img class="lffdatelogo" src="'.HTML_PATH_ROOT.'/bl-themes/jttheme/img/lfflogowhite.webp" />'.$lffmonth.'</div>';
 					$html .= '<div class="lffdatelabel">'.$lffdate.'</div>';
 					$html .= '</li>';
 					$count++;
@@ -115,7 +116,7 @@ function nth_day_of_month($nbr, $day, $mon, $year){
 		}
 		
 		public function LFF_Map() {
-			$path = dirname(getcwd())."/map";
+			$path = PATH_CONTENT.'lff-events/maps/';
 			$result = [];
 			foreach (glob($path.'/*.{webp,jpg,jpeg,gif,bmp,png}',GLOB_BRACE) as $file) {
 				$result[] = [filemtime($file), $file];
@@ -123,9 +124,8 @@ function nth_day_of_month($nbr, $day, $mon, $year){
 			rsort($result);
 			$filename=explode("/",$result[0][1]);
 			$latestImage=end($filename);
-			//$latestImage=implode($latestImage);
 			$html='<div class="lffmap">';
-			$html .= '<img class="lffmapimg" src="/map/'.$latestImage.'" />';
+			$html .= '<img class="lffmapimg" src="'.HTML_PATH_ROOT.'bl-content/lff-events/maps/'.$latestImage.'" />';
 			$html .= '</div>';
 			return $html;
 		}
@@ -201,8 +201,8 @@ function nth_day_of_month($nbr, $day, $mon, $year){
 				if ($eventCount > 6) {break; }		
 				$html .= '<div class="galleryitem">';
 				$html .= '	<div class="gridevent">';
-				$html .= '		<div class="lffeventimage">';
-				$html .= '         <a href="about?event='.$event['eventid'].'">';
+				$html .= '		<div class="lffeventimage" style="view-transition-name: eventimage'.$event['eventid'].';">';
+				$html .= '         <a href="about?event='.str_replace(" ","_",$event['eventtitle']).'">';
 				$html .= '			<img class="galleryimg" src="'.HTML_PATH_ROOT.'/bl-content/lff-events/images/'.$event['eventimage'].'"/>';
 				$html .= '         </a>';
 				$html .= '		</div>';
@@ -217,8 +217,8 @@ function nth_day_of_month($nbr, $day, $mon, $year){
 				$html .= $evDay.'</div>';
 				$html .= '			<div class="eventtime">';
 				$html .= '<i class="fa-solid fa-clock"></i>				'.$evStart->format('ga')." - " .$evEnd->format('ga');
-				//$html .= '			</div>';
-				//$html .= '			<div class="gridinnertext">';
+				$html .= '			</div>';
+				$html .= '			<div class="gridinnertext">';
 				$html .= '   <i class="fa-solid fa-location-dot"></i>				'.$event['eventvenue'];
 				$html .= '			</div>';
 				//$html .= '			<div class="gridinnertext">';
@@ -247,7 +247,10 @@ function nth_day_of_month($nbr, $day, $mon, $year){
 				$html .= '        <img class="galleryimg" src="'.HTML_PATH_ROOT.'/bl-content/lff-events/images/'.$highlight['venueimage'].'" />';
 				$html .= '         </a>';
 				$html .= '         <div class="gridinnertext">';
-				$html .= '             '.$highlight['highlighttitle'];
+				$html .= '             <div class="venue">';
+				$html .= '             '.$highlight['highlightvenue'];
+				$html .= '         </div>';
+				$html .= '         <div class="title" style="font-size:0.75em;">'.$highlight['highlighttitle'].'</div>';
 				$html .= '         </div>';
 				$html .= '    </div>';
 				$html .= '</div>';
@@ -255,6 +258,29 @@ function nth_day_of_month($nbr, $day, $mon, $year){
 			}
 			$html .= '</div>';
 			$html .= '</section>';
+			return $html;
+		}
+		public function LFF_Hotels() {
+			$myfile = file_get_contents(PATH_CONTENT.'/lff-events/json/lffeventdata.json', "r") or die("Unable to load LFF data :'(");
+			$myData=json_decode($myfile,true);
+			$venueList=$myData['places'];	
+			$html = '<section>';
+		if ($WHERE_AM_I == "home" ) $html .= '<h4>Hotels</h4>';
+			$html .= '<div class="gallery">';
+			foreach ($venueList as $venue) {
+				if ($venue['venuecategory'] != "Hotels" || $venue['venuerecommended'] != "on") { continue; }
+				$html .= '<div class="galleryitem" style="view-transition-name: venueimage'.$venue['venueid'].';">';
+				$html .= '<div class="gridevent">';
+				$html .= '         <a href="about?venue='.str_replace(' ','_',$venue['venuename']).'">';
+				$html .= '	<img  class="galleryimg" src="'.HTML_PATH_ROOT.'/bl-content/lff-events/images/'.$venue['venueimage'].'" />';
+				$html .= ' </a>';
+				$html .= '	<div class="gallerytile">';
+				$html .= '		'.$venue['venuename'];
+				$html .= '	</div>';
+				$html .= '	</div>';
+				$html .= '</div>';	
+			}
+			$html .= '</div>';
 			return $html;
 		}
 		
@@ -266,8 +292,8 @@ function nth_day_of_month($nbr, $day, $mon, $year){
 			$html .= '<h3>Places to visit</h3>';
 			foreach ($venueList as $venue) {
 				$html .= '<div class="lffvenue">';
-				$html .= '         <a href="about?venue='.$venue['venueid'].'">';
-				$html .= '	<img src="'.HTML_PATH_ROOT.'/bl-content/lff-events/images/'.$venue['venueimage'].'" />';
+				$html .= '         <a href="about?venue='.$venue['venuename'].'">';
+				$html .= '	<img style="view-transition-name:venueimager'.$venue['venueid'].';" src="'.HTML_PATH_ROOT.'/bl-content/lff-events/images/'.$venue['venueimage'].'" />';
 				$html .= ' </a>';
 				$html .= '	<div class="venuename">';
 				$html .= '		'.$venue['venuename'];
@@ -283,16 +309,19 @@ function nth_day_of_month($nbr, $day, $mon, $year){
 			$myData=json_decode($myfile,true);
 			$venueList=$myData['places'];	
 			
-			$html .= '';
+			$html = '';
+			$html .= '<h4>Recommended Venues</h4>';
 			$html .= '<div class="gallery">';
 			foreach ($venueList as $venue) {
-				if ($venue['venuerecommended']==0) continue;
-				$html .= '<div class="galleryitem">';
-				$html .= '         <a href="about?venue='.$venue['venueid'].'">';
-				$html .= '	<img class="galleryimg" src="'.HTML_PATH_ROOT.'/bl-content/lff-events/images/'.$venue['venueimage'].'" />';
+				if ($venue['venuerecommended']==0 || $venue['venuecategory'] == "Hotels") continue;
+				$html .= '<div class="galleryitem" style="view-transition-name: venueimage'.$venue['venueid'].';">';
+				$html .= '<div class="gridevent">';
+				$html .= '         <a href="about?venue='.str_replace(" ","_",$venue['venuename']).'">';
+				$html .= '	<img  class="galleryimg" src="'.HTML_PATH_ROOT.'/bl-content/lff-events/images/'.$venue['venueimage'].'" />';
 				$html .= ' </a>';
-				$html .= '	<div class="gallerytitle">';
+				$html .= '	<div class="gallerytile">';
 				$html .= '		'.$venue['venuename'];
+				$html .= '	</div>';
 				$html .= '	</div>';
 				$html .= '</div>';	
 			}
@@ -364,7 +393,7 @@ function nth_day_of_month($nbr, $day, $mon, $year){
 				break;
 				
 			default:
-				// Homepage (Thx Diego for this tip)	
+				// 
 			*/
 			foreach($content as $key=>$Post)
 			{
